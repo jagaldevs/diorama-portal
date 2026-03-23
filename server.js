@@ -69,16 +69,17 @@ const ACCEPTED_TYPES = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-  'application/msword': 'docx',
-  'application/vnd.ms-powerpoint': 'pptx',
-  'application/vnd.ms-excel': 'xlsx',
+  'application/msword': 'doc',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.ms-excel': 'xls',
 };
+
+const EXT_MAP = { 'pdf':'pdf', 'doc':'doc', 'docx':'docx', 'ppt':'ppt', 'pptx':'pptx', 'xls':'xls', 'xlsx':'xlsx' };
 
 function getFileType(mimetype, originalname) {
   if (ACCEPTED_TYPES[mimetype]) return ACCEPTED_TYPES[mimetype];
   const ext = originalname.split('.').pop().toLowerCase();
-  if (['pdf','docx','pptx','xlsx','doc','ppt','xls'].includes(ext)) return ext.replace('doc','docx').replace('ppt','pptx').replace('xls','xlsx');
-  return null;
+  return EXT_MAP[ext] || null;
 }
 
 // ---- Text extraction ----
@@ -92,6 +93,9 @@ async function extractText(buffer, fileType) {
   fs.writeFileSync(tmpPath, buffer);
   try {
     const text = await officeParser.parseOffice(tmpPath);
+    if (!text || text.trim().length < 10) {
+      throw new Error('Could not extract text. If this is an older .ppt or .xls file, try saving it as .pptx or .xlsx first.');
+    }
     return text.trim();
   } finally {
     fs.unlink(tmpPath, () => {});
