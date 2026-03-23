@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diorama Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --warn: #f78166;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --r: 12px;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo { font-size: 22px; }
+header h1 { font-size: 18px; font-weight: 700; }
+header .beta {
+  font-size: 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+/* Layout */
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  height: calc(100vh - 61px);
+}
+
+/* Left column */
+.left {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Steps */
+.step {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 22px;
+  flex: 1;
+}
+.step.active { display: flex; }
+
+.step-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Drop zone */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r);
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+}
+.dropzone:hover, .dropzone.drag-over {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.04);
+}
+.dropzone input {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+.dropzone-icon { font-size: 32px; margin-bottom: 10px; }
+.dropzone p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.dropzone p strong { color: var(--text); }
+
+/* File badge */
+.file-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 13px;
+}
+.file-badge .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-badge .size { color: var(--muted); white-space: nowrap; }
+.file-badge .rm {
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 15px; line-height: 1;
+}
+.file-badge .rm:hover { color: var(--warn); }
+
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+.btn-primary { background: var(--accent); color: #0d1117; }
+.btn-green { background: var(--green); color: #0d1117; }
+.btn-outline {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 9px;
+}
+.btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+/* Classification result card */
+.classify-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.classify-icon { font-size: 32px; }
+.classify-topic { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.classify-reason { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.classify-format {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(88,166,255,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(88,166,255,0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Format switcher */
+.format-switcher {
+  display: flex;
+  gap: 6px;
+}
+.fmt-btn {
+  flex: 1;
+  padding: 8px 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.fmt-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(88,166,255,0.08);
+}
+
+/* Progress */
+.progress-area { display: flex; flex-direction: column; gap: 12px; }
+.status-line {
+  font-size: 13px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress-track {
+  height: 4px; background: var(--surface2);
+  border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #a371f7);
+  border-radius: 4px; width: 0%;
+  transition: width 0.4s ease;
+}
+.char-count { font-size: 11px; color: var(--muted); text-align: right; }
+
+/* Error */
+.error {
+  background: rgba(247,129,102,0.1);
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--warn);
+  line-height: 1.5;
+  display: none;
+}
+.error.show { display: block; }
+
+/* Download */
+.btn-download {
+  display: none;
+  width: 100%;
+  padding: 12px;
+  background: var(--surface2);
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.2s;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-download.show { display: flex; }
+.btn-download:hover { background: rgba(63,185,80,0.1); }
+
+/* Right column — preview */
+.right {
+  display: flex;
+  flex-direction: column;
+  background: #060810;
+}
+.preview-bar {
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--bg);
+}
+.tab-row { display: flex; gap: 4px; }
+.tab {
+  padding: 5px 14px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab.active { background: var(--surface2); border-color: var(--border); color: var(--text); }
+
+.pane { display: none; flex: 1; flex-direction: column; }
+.pane.active { display: flex; }
+
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; color: var(--muted); font-size: 14px;
+}
+.empty-state .icon { font-size: 52px; opacity: 0.2; }
+
+#preview-frame {
+  flex: 1; border: none; background: #fff; display: none;
+}
+#code-view {
+  flex: 1; overflow: auto; padding: 20px;
+}
+#code-view pre {
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 12px; line-height: 1.6;
+  color: var(--muted); white-space: pre-wrap; word-break: break-all;
+}
+
+/* Stream ticker in preview bar */
+.ticker {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: 'Menlo', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 400px;
+  display: none;
+}
+.ticker.show { display: block; }
+
+@media (max-width: 800px) {
+  main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .left { border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; overflow-y: auto; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">&#127757;</div>
+  <h1>Diorama Portal <span class="beta">beta</span></h1>
+</header>
+
+<main>
+  <!-- LEFT -->
+  <div class="left">
+
+    <!-- Step 1: Upload -->
+    <div class="step active" id="step-upload">
+      <div class="step-label">Step 1 — Upload PDF</div>
+
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".pdf,application/pdf">
+        <div class="dropzone-icon">&#128196;</div>
+        <p><strong>Drop your PDF here</strong><br>or click to browse</p>
+      </div>
+
+      <div id="file-badge" class="file-badge" style="display:none;">
+        <span>&#128196;</span>
+        <span class="name" id="badge-name"></span>
+        <span class="size" id="badge-size"></span>
+        <button class="rm" id="remove-file">&#x2715;</button>
+      </div>
+
+      <div class="error" id="upload-error"></div>
+
+      <button class="btn btn-primary" id="btn-analyse" disabled>
+        &#128269; Analyse PDF
+      </button>
+
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">
+        Upload a textbook page, lesson notes, or handout. The AI detects the content type and generates the right interactive format.
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm format -->
+    <div class="step" id="step-confirm">
+      <div class="step-label">Step 2 — Confirm Format</div>
+
+      <div class="classify-card" id="classify-card">
+        <div class="classify-icon" id="cls-icon"></div>
+        <div class="classify-topic" id="cls-topic"></div>
+        <div><span class="classify-format" id="cls-format"></span></div>
+        <div class="classify-reason" id="cls-reason"></div>
+      </div>
+
+      <div>
+        <div class="step-label" style="margin-bottom:8px;">Switch format</div>
+        <div class="format-switcher">
+          <button class="fmt-btn" data-fmt="timeline">&#8987; Timeline</button>
+          <button class="fmt-btn" data-fmt="process">&#9881; Process</button>
+          <button class="fmt-btn" data-fmt="scene">&#127759; 3D Scene</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-generate">
+        &#9889; Generate
+      </button>
+      <button class="btn btn-outline" id="btn-back">&#8592; Upload different PDF</button>
+    </div>
+
+    <!-- Step 3: Generating -->
+    <div class="step" id="step-generating">
+      <div class="step-label">Step 3 — Generating</div>
+
+      <div class="progress-area">
+        <div class="status-line">
+          <div class="spinner"></div>
+          <span id="status-text">Starting...</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="char-count" id="char-count">0 characters</div>
+      </div>
+
+      <div class="error" id="gen-error"></div>
+    </div>
+
+    <!-- Step 4: Done -->
+    <div class="step" id="step-done">
+      <div class="step-label">Step 4 — Done</div>
+
+      <div class="classify-card" style="gap:8px;">
+        <div style="font-size:28px;">&#9989;</div>
+        <div style="font-size:15px;font-weight:700;" id="done-title"></div>
+        <div style="font-size:13px;color:var(--muted);" id="done-chars"></div>
+      </div>
+
+      <a class="btn-download show" id="btn-download" download="diorama.html">
+        &#8681; Download HTML File
+      </a>
+
+      <button class="btn btn-outline" id="btn-restart">&#8635; Generate another</button>
+
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">
+        <strong style="color:var(--text);">Canvas tip:</strong> Upload the HTML file to Canvas Files, then embed it in a Page using an iframe.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Preview -->
+  <div class="right">
+    <div class="preview-bar">
+      <span class="ticker" id="ticker"></span>
+      <div class="tab-row">
+        <button class="tab active" data-tab="preview">Preview</button>
+        <button class="tab" data-tab="code">HTML Source</button>
+      </div>
+    </div>
+
+    <div class="pane active" id="tab-preview">
+      <div class="empty-state" id="empty-state">
+        <div class="icon">&#127757;</div>
+        <div>Your generated resource will appear here</div>
+      </div>
+      <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+
+    <div class="pane" id="tab-code">
+      <div id="code-view"><pre id="code-pre">No output yet.</pre></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // --- State ---
+  let selectedFile = null;
+  let textId = null;
+  let selectedFormat = null;
+  let blobURL = null;
+
+  const FORMAT_META = {
+    timeline: { icon: '⌛', label: 'History Timeline', desc: 'Events on a 3D track' },
+    process:  { icon: '⚙️', label: 'Animated Process', desc: 'Step-by-step diagram' },
+    scene:    { icon: '🌍', label: '3D Scene',         desc: 'Interactive environment' },
+  };
+
+  // --- Elements ---
+  const dropzone    = document.getElementById('dropzone');
+  const fileInput   = document.getElementById('file-input');
+  const fileBadge   = document.getElementById('file-badge');
+  const badgeName   = document.getElementById('badge-name');
+  const badgeSize   = document.getElementById('badge-size');
+  const removeBtn   = document.getElementById('remove-file');
+  const btnAnalyse  = document.getElementById('btn-analyse');
+  const uploadError = document.getElementById('upload-error');
+  const btnGenerate = document.getElementById('btn-generate');
+  const btnBack     = document.getElementById('btn-back');
+  const btnRestart  = document.getElementById('btn-restart');
+  const btnDownload = document.getElementById('btn-download');
+  const statusText  = document.getElementById('status-text');
+  const progressFill= document.getElementById('progress-fill');
+  const charCount   = document.getElementById('char-count');
+  const genError    = document.getElementById('gen-error');
+  const ticker      = document.getElementById('ticker');
+  const previewFrame= document.getElementById('preview-frame');
+  const emptyState  = document.getElementById('empty-state');
+  const codePre     = document.getElementById('code-pre');
+
+  // --- Step navigation ---
+  function showStep(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // --- Tabs ---
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // --- Format switcher ---
+  document.querySelectorAll('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedFormat = btn.dataset.fmt;
+      updateClassifyCard(selectedFormat);
+    });
+  });
+
+  function updateClassifyCard(fmt) {
+    const m = FORMAT_META[fmt] || FORMAT_META.scene;
+    document.getElementById('cls-icon').textContent = m.icon;
+    document.getElementById('cls-format').textContent = m.label;
+  }
+
+  // --- File handling ---
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+  removeBtn.addEventListener('click', clearFile);
+
+  function setFile(file) {
+    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+      showError(uploadError, 'Only PDF files are supported.');
+      return;
+    }
+    selectedFile = file;
+    badgeName.textContent = file.name;
+    badgeSize.textContent = fmtBytes(file.size);
+    fileBadge.style.display = 'flex';
+    dropzone.style.display = 'none';
+    btnAnalyse.disabled = false;
+    hideError(uploadError);
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    fileBadge.style.display = 'none';
+    dropzone.style.display = '';
+    btnAnalyse.disabled = true;
+  }
+
+  function fmtBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  // --- Step 1 → Step 2: Analyse ---
+  btnAnalyse.addEventListener('click', async () => {
+    btnAnalyse.disabled = true;
+    btnAnalyse.textContent = 'Analysing...';
+    hideError(uploadError);
+
+    try {
+      const fd = new FormData();
+      fd.append('pdf', selectedFile);
+
+      const res = await fetch('/api/classify', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Classification failed');
+
+      textId = data.textId;
+      selectedFormat = data.format || 'scene';
+
+      // Populate classify card
+      const m = FORMAT_META[selectedFormat] || FORMAT_META.scene;
+      document.getElementById('cls-icon').textContent = m.icon;
+      document.getElementById('cls-topic').textContent = data.topic || 'Unknown topic';
+      document.getElementById('cls-format').textContent = m.label;
+      document.getElementById('cls-reason').textContent = data.reason || '';
+
+      // Set active format button
+      document.querySelectorAll('.fmt-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.fmt === selectedFormat);
+      });
+
+      showStep('step-confirm');
+
+    } catch (err) {
+      showError(uploadError, err.message);
+    } finally {
+      btnAnalyse.disabled = false;
+      btnAnalyse.innerHTML = '&#128269; Analyse PDF';
+    }
+  });
+
+  btnBack.addEventListener('click', () => {
+    showStep('step-upload');
+  });
+
+  btnRestart.addEventListener('click', () => {
+    clearFile();
+    codePre.textContent = 'No output yet.';
+    previewFrame.style.display = 'none';
+    previewFrame.src = '';
+    emptyState.style.display = '';
+    if (blobURL) { URL.revokeObjectURL(blobURL); blobURL = null; }
+    showStep('step-upload');
+  });
+
+  // --- Step 2 → Step 3: Generate ---
+  btnGenerate.addEventListener('click', async () => {
+    if (!textId || !selectedFormat) return;
+
+    showStep('step-generating');
+    progressFill.style.width = '2%';
+    charCount.textContent = '0 characters';
+    statusText.textContent = 'Connecting...';
+    hideError(genError);
+    ticker.classList.add('show');
+    ticker.textContent = 'Starting generation...';
+    codePre.textContent = '';
+    emptyState.style.display = 'none';
+    previewFrame.style.display = 'none';
+    previewFrame.src = '';
+    if (blobURL) { URL.revokeObjectURL(blobURL); blobURL = null; }
+
+    let totalChars = 0;
+    let htmlOutput = '';
+    const EXPECTED = 55000;
+
+    try {
+      const res = await fetch(`/api/generate?textId=${encodeURIComponent(textId)}&format=${encodeURIComponent(selectedFormat)}`);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let currentEvent = 'message';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            try {
+              const payload = JSON.parse(line.slice(6));
+              if (currentEvent === 'status') {
+                statusText.textContent = payload.message;
+                ticker.textContent = payload.message;
+              } else if (currentEvent === 'chunk') {
+                htmlOutput += payload.text;
+                totalChars += payload.text.length;
+                charCount.textContent = totalChars.toLocaleString() + ' characters';
+                progressFill.style.width = Math.min(94, (totalChars / EXPECTED) * 90 + 4) + '%';
+                ticker.textContent = payload.text.replace(/\s+/g,' ').trim().slice(-100);
+                if (totalChars % 3000 < 150) codePre.textContent = htmlOutput;
+              } else if (currentEvent === 'complete') {
+                progressFill.style.width = '100%';
+                const html = payload.html || htmlOutput;
+                codePre.textContent = html;
+
+                blobURL = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+                previewFrame.src = blobURL;
+                previewFrame.style.display = 'block';
+
+                const safeName = (selectedFile.name.replace(/\.pdf$/i,'') || 'resource')
+                  .replace(/[^a-z0-9_-]/gi,'_').toLowerCase();
+                btnDownload.href = blobURL;
+                btnDownload.download = safeName + '.html';
+
+                document.getElementById('done-title').textContent =
+                  FORMAT_META[selectedFormat]?.label + ' generated';
+                document.getElementById('done-chars').textContent =
+                  html.length.toLocaleString() + ' characters · ready to download';
+
+                ticker.classList.remove('show');
+                showStep('step-done');
+              } else if (currentEvent === 'error') {
+                throw new Error(payload.message);
+              }
+              currentEvent = 'message';
+            } catch(e) {
+              if (e.message !== 'Unexpected end of JSON input') {
+                showError(genError, e.message);
+                showStep('step-generating');
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      showError(genError, err.message);
+      ticker.classList.remove('show');
+    }
+  });
+
+  function showError(el, msg) { el.textContent = '⚠ ' + msg; el.classList.add('show'); }
+  function hideError(el) { el.classList.remove('show'); }
+</script>
+</body>
+</html>

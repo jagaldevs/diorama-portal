@@ -1,0 +1,16 @@
+{
+  "name": "diorama-portal",
+  "version": "1.0.0",
+  "description": "Teacher portal for generating interactive 3D dioramas from PDFs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1"
+  }
+}
