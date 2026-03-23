@@ -18,6 +18,26 @@ TECHNICAL REQUIREMENTS:
 - Three.js r128 CDN: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
 - Events arranged along a curved 3D path (use CatmullRomCurve3)
 - Camera animates smoothly between event positions using lerp (0.05 per frame)
+- Also allow free orbit between events — YOU MUST IMPLEMENT THIS EXACTLY:
+
+  let theta = 0.4, phi = 1.0, radius = 22, isDragging = false, lastX = 0, lastY = 0;
+  renderer.domElement.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('mouseup', () => isDragging = false);
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    theta -= (e.clientX - lastX) * 0.01;
+    phi = Math.max(0.25, Math.min(Math.PI / 2.1, phi + (e.clientY - lastY) * 0.01));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  renderer.domElement.addEventListener('wheel', e => { radius = Math.max(8, Math.min(50, radius + e.deltaY * 0.02)); });
+  renderer.domElement.addEventListener('touchstart', e => { isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; });
+  renderer.domElement.addEventListener('touchend', () => isDragging = false);
+  renderer.domElement.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    theta -= (e.touches[0].clientX - lastX) * 0.01;
+    phi = Math.max(0.25, Math.min(Math.PI / 2.1, phi + (e.touches[0].clientY - lastY) * 0.01));
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  });
 - Each event: a glowing sphere node + floating HTML label card
 - Environment: dark background (#0a0a1a), subtle star particle field (2000 points), thin glowing track line
 - Simple vertex + fragment shaders for the track glow and event nodes

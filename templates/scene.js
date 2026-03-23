@@ -21,7 +21,29 @@ TECHNICAL REQUIREMENTS:
 - Renderer: antialias, PCFSoftShadowMap, ACESFilmicToneMapping, exposure 1.3, sRGBEncoding
 - 8 lights: ambient, hemisphere, directional key (shadow 2048), fill, overhead, 3 point lights
 - FogExp2 density 0.009, sky SphereGeometry(180,64,32) BackSide vertex-coloured
-- Camera: spherical orbit, phi clamped [0.25, PI/2.1], mouse + touch + scroll wheel
+- Camera: spherical orbit — YOU MUST IMPLEMENT THIS EXACTLY using the following code:
+
+  let theta = 0.4, phi = 1.0, radius = 18, isDragging = false, lastX = 0, lastY = 0;
+  renderer.domElement.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('mouseup', () => isDragging = false);
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    theta -= (e.clientX - lastX) * 0.01;
+    phi = Math.max(0.25, Math.min(Math.PI / 2.1, phi + (e.clientY - lastY) * 0.01));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  renderer.domElement.addEventListener('wheel', e => { radius = Math.max(6, Math.min(40, radius + e.deltaY * 0.02)); });
+  renderer.domElement.addEventListener('touchstart', e => { isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; });
+  renderer.domElement.addEventListener('touchend', () => isDragging = false);
+  renderer.domElement.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    theta -= (e.touches[0].clientX - lastX) * 0.01;
+    phi = Math.max(0.25, Math.min(Math.PI / 2.1, phi + (e.touches[0].clientY - lastY) * 0.01));
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  });
+  // In animate loop, update camera with:
+  // camera.position.set(radius*Math.sin(phi)*Math.sin(theta), radius*Math.cos(phi), radius*Math.sin(phi)*Math.cos(theta));
+  // camera.lookAt(0, 1, 0);
 - 2 particle systems (~1000 total): atmospheric + ground layer
 - HTML marker divs repositioned every frame via Vector3.project(camera)
 

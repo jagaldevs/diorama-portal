@@ -91,7 +91,9 @@ async function extractText(buffer, fileType) {
   const tmpPath = path.join(os.tmpdir(), `upload_${Date.now()}.${fileType}`);
   fs.writeFileSync(tmpPath, buffer);
   try {
-    const text = await officeParser.parseOfficeAsync(tmpPath);
+    const text = await new Promise((resolve, reject) =>
+      officeParser.parseOffice(tmpPath, (data, err) => err ? reject(err) : resolve(data))
+    );
     return text.trim();
   } finally {
     fs.unlink(tmpPath, () => {});
