@@ -13,14 +13,13 @@ RULES:
 
 TECHNICAL REQUIREMENTS:
 - Three.js r128 CDN: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
-- Shared vertex shader passing: vUv, vPos, vNorm, vWorldPos, vWorldNorm
-- 3 custom GLSL fragment shaders for primary surfaces (stone, wood, earth, fabric etc — choose for topic)
-  - Each includes 3D hash-permutation noise + fBm (5 octaves)
-  - Hardcode lightDir vec3 in each shader (ShaderMaterial does not receive scene lights)
-- roughBox(w,h,d,mat): BoxGeometry with per-vertex random displacement + computeVertexNormals()
-- Renderer: antialias, PCFSoftShadowMap, ACESFilmicToneMapping, exposure 1.3, sRGBEncoding
-- 8 lights: ambient, hemisphere, directional key (shadow 2048), fill, overhead, 3 point lights
-- FogExp2 density 0.009, sky SphereGeometry(180,64,32) BackSide vertex-coloured
+- Use ONLY MeshLambertMaterial or MeshStandardMaterial — NO custom ShaderMaterial or GLSL shaders
+- Choose a colour palette of 4–6 hex colours appropriate to the topic (e.g. earthy tones for history, blues/greens for geography)
+- roughBox(w,h,d,color): BoxGeometry with per-vertex random displacement (±0.08) + computeVertexNormals(), returns Mesh with MeshLambertMaterial({color})
+- Renderer: antialias, PCFSoftShadowMap, sRGBEncoding
+- 4 lights: AmbientLight(0xffffff,0.5), HemisphereLight(sky,ground,0.6), DirectionalLight with shadow mapSize 1024, one PointLight for atmosphere
+- FogExp2 density 0.012, background colour set on renderer
+- Simple flat ground plane using MeshLambertMaterial
 - Camera: spherical orbit — YOU MUST IMPLEMENT THIS EXACTLY using the following code:
 
   let theta = 0.4, phi = 1.0, radius = 18, isDragging = false, lastX = 0, lastY = 0;
@@ -44,13 +43,14 @@ TECHNICAL REQUIREMENTS:
   // In animate loop, update camera with:
   // camera.position.set(radius*Math.sin(phi)*Math.sin(theta), radius*Math.cos(phi), radius*Math.sin(phi)*Math.cos(theta));
   // camera.lookAt(0, 1, 0);
-- 2 particle systems (~1000 total): atmospheric + ground layer
 - HTML marker divs repositioned every frame via Vector3.project(camera)
 
 CRITICAL (Three.js r128):
+- NEVER use ShaderMaterial, RawShaderMaterial, or any GLSL — use MeshLambertMaterial only
 - NEVER Object.assign on mesh.position — always .position.set(x,y,z)
-- NEVER add Math.random() to a hex colour — use palette arrays
-- NO CapsuleGeometry — use cylinder + sphere caps
+- NEVER add Math.random() to a hex colour — use palette arrays defined at the top
+- NO CapsuleGeometry — use CylinderGeometry + SphereGeometry for rounded shapes
+- Every mesh.position MUST be set with .set(x,y,z) after creation
 
 CONTENT — extract from source only:
 - 5 INFO_POINTS: { id, title, subtitle, curriculumCode, subjects[], position{x,y,z}, paragraphs[2], thinkAbout, stats[3], vocabulary[3] }
