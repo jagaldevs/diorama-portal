@@ -69,12 +69,9 @@ const ACCEPTED_TYPES = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-  'application/msword': 'doc',
-  'application/vnd.ms-powerpoint': 'ppt',
-  'application/vnd.ms-excel': 'xls',
 };
 
-const EXT_MAP = { 'pdf':'pdf', 'doc':'doc', 'docx':'docx', 'ppt':'ppt', 'pptx':'pptx', 'xls':'xls', 'xlsx':'xlsx' };
+const EXT_MAP = { 'pdf':'pdf', 'docx':'docx', 'pptx':'pptx', 'xlsx':'xlsx' };
 
 function getFileType(mimetype, originalname) {
   if (ACCEPTED_TYPES[mimetype]) return ACCEPTED_TYPES[mimetype];
@@ -92,9 +89,10 @@ async function extractText(buffer, fileType) {
   const tmpPath = path.join(os.tmpdir(), `upload_${Date.now()}.${fileType}`);
   fs.writeFileSync(tmpPath, buffer);
   try {
-    const text = await officeParser.parseOffice(tmpPath);
+    const raw = await officeParser.parseOffice(tmpPath);
+    const text = typeof raw === 'string' ? raw : (raw?.text || raw?.value || JSON.stringify(raw) || '');
     if (!text || text.trim().length < 10) {
-      throw new Error('Could not extract text. If this is an older .ppt or .xls file, try saving it as .pptx or .xlsx first.');
+      throw new Error('Could not extract text from this file.');
     }
     return text.trim();
   } finally {
@@ -108,7 +106,7 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (getFileType(file.mimetype, file.originalname)) cb(null, true);
-    else cb(new Error('Unsupported file type. Please upload a PDF, Word, PowerPoint, or Excel file.'));
+    else cb(new Error('Unsupported file type. Please upload a PDF, DOCX, PPTX, or XLSX file. Old formats (.ppt, .doc, .xls) are not supported — open in Office or Google Slides and save as the newer format first.'));
   }
 });
 
