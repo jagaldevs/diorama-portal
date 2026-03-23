@@ -1,9 +1,11 @@
 const express = require('express');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
+const officeParser = require('officeparser');
 const Anthropic = require('@anthropic-ai/sdk');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const scenePrompt = require('./templates/scene');
 const timelinePrompt = require('./templates/timeline');
@@ -61,13 +63,48 @@ function getIP(req) {
   return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
 }
 
+// ---- Supported file types ----
+const ACCEPTED_TYPES = {
+  'application/pdf': 'pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'application/msword': 'docx',
+  'application/vnd.ms-powerpoint': 'pptx',
+  'application/vnd.ms-excel': 'xlsx',
+};
+
+function getFileType(mimetype, originalname) {
+  if (ACCEPTED_TYPES[mimetype]) return ACCEPTED_TYPES[mimetype];
+  const ext = originalname.split('.').pop().toLowerCase();
+  if (['pdf','docx','pptx','xlsx','doc','ppt','xls'].includes(ext)) return ext.replace('doc','docx').replace('ppt','pptx').replace('xls','xlsx');
+  return null;
+}
+
+// ---- Text extraction ----
+async function extractText(buffer, fileType) {
+  if (fileType === 'pdf') {
+    const data = await pdfParse(buffer);
+    return data.text.trim();
+  }
+  // For office formats, officeparser needs a file path
+  const tmpPath = path.join(os.tmpdir(), `upload_${Date.now()}.${fileType}`);
+  fs.writeFileSync(tmpPath, buffer);
+  try {
+    const text = await officeParser.parseOfficeAsync(tmpPath);
+    return text.trim();
+  } finally {
+    fs.unlink(tmpPath, () => {});
+  }
+}
+
 // ---- Multer ----
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') cb(null, true);
-    else cb(new Error('Only PDF files are accepted'));
+    if (getFileType(file.mimetype, file.originalname)) cb(null, true);
+    else cb(new Error('Unsupported file type. Please upload a PDF, Word, PowerPoint, or Excel file.'));
   }
 });
 
@@ -184,8 +221,8 @@ app.post('/api/classify', upload.single('pdf'), async (req, res) => {
       });
     }
 
-    const pdfData = await pdfParse(req.file.buffer);
-    const sourceText = pdfData.text.trim();
+    const fileType = getFileType(req.file.mimetype, req.file.originalname);
+    const sourceText = await extractText(req.file.buffer, fileType);
 
     if (!sourceText || sourceText.length < 50) {
       return res.status(400).json({ error: 'Could not extract text from this PDF. Is it a scanned image?' });

@@ -423,10 +423,10 @@ main {
     <!-- Step 1: Upload -->
     <div class="step active" id="step-upload">
       <div class="dropzone" id="dropzone">
-        <input type="file" id="file-input" accept=".pdf,application/pdf">
+        <input type="file" id="file-input" accept=".pdf,.docx,.pptx,.xlsx,.doc,.ppt,.xls">
         <div class="dz-icon">&#128196;</div>
-        <div class="dz-title">Drop your PDF here</div>
-        <div class="dz-sub">or click to browse &middot; textbooks, notes, handouts</div>
+        <div class="dz-title">Drop your file here</div>
+        <div class="dz-sub">or click to browse &middot; PDF, Word, PowerPoint, Excel</div>
       </div>
 
       <div id="file-badge" class="file-badge" style="display:none;">
@@ -439,7 +439,7 @@ main {
       <div class="error" id="upload-error"></div>
 
       <button class="btn btn-primary" id="btn-analyse" disabled>
-        Analyse PDF
+        Analyse Document
       </button>
 
       <div style="font-size:12px;color:var(--muted);line-height:1.8;text-align:center;">
@@ -649,9 +649,11 @@ main {
   fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
   removeBtn.addEventListener('click', clearFile);
 
+  const ALLOWED_EXTS = ['pdf','docx','pptx','xlsx','doc','ppt','xls'];
   function setFile(file) {
-    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-      showError(uploadError, 'Only PDF files are supported.');
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_EXTS.includes(ext)) {
+      showError(uploadError, 'Please upload a PDF, Word (.docx), PowerPoint (.pptx), or Excel (.xlsx) file.');
       return;
     }
     selectedFile = file;
@@ -680,7 +682,7 @@ main {
   // ---- Analyse ----
   btnAnalyse.addEventListener('click', async () => {
     btnAnalyse.disabled = true;
-    btnAnalyse.textContent = 'Reading...';
+    btnAnalyse.textContent = 'Reading document...';
     hideError(uploadError);
 
     try {
@@ -708,7 +710,7 @@ main {
       showError(uploadError, err.message);
     } finally {
       btnAnalyse.disabled = false;
-      btnAnalyse.textContent = 'Analyse PDF';
+      btnAnalyse.textContent = 'Analyse Document';
     }
   });
 
