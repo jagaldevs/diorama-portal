@@ -10,6 +10,8 @@ const os = require('os');
 const scenePrompt = require('./templates/scene');
 const timelinePrompt = require('./templates/timeline');
 const processPrompt = require('./templates/process');
+const conceptWebPrompt = require('./templates/concept-web');
+const comparisonPrompt = require('./templates/comparison');
 
 const app = express();
 const PORT = 3000;
@@ -242,7 +244,7 @@ ${sourceText.slice(0, 3000)}
 
 Respond with exactly this JSON structure:
 {
-  "format": "timeline" | "process" | "scene",
+  "format": "timeline" | "process" | "scene" | "concept-web" | "comparison",
   "topic": "short topic name (max 6 words)",
   "subject": "History" | "Science" | "Geography" | "Society" | "Other",
   "reason": "one sentence explaining the format choice"
@@ -252,8 +254,10 @@ Rules — read carefully, these are strict:
 - "timeline": ANY content involving dates, chronological sequences, historical events, biographies, reigns, wars, dynasties, periods, or "what happened and when". If the text has years or a sequence of events involving people over time, it is ALWAYS timeline.
 - "process": ONLY for scientific/technical processes — water cycle, photosynthesis, how a volcano erupts, stages of mitosis, how a law is passed. Must be a repeatable system or cycle, NOT a historical narrative.
 - "scene": culture, society, daily life, a specific place or civilisation, geography of a place. Use this when the content describes what a place or society looked like, not what happened over time.
+- "concept-web": themes, ideas, characters, causes and effects, vocabulary, or any content best understood as a web of connected concepts rather than a sequence or process.
+- "comparison": content that explicitly compares two or more things, people, places, periods, or systems across multiple criteria.
 
-When in doubt between timeline and scene, choose timeline. Never use process for biographical or historical content.`
+When in doubt between timeline and scene, choose timeline. Never use process for biographical or historical content. Default to timeline for history, scene for geography/culture, concept-web for literature/themes.`
       }]
     });
 
@@ -295,6 +299,8 @@ app.get('/api/generate', async (req, res) => {
 
     const templateFn = format === 'timeline' ? timelinePrompt
       : format === 'process' ? processPrompt
+      : format === 'concept-web' ? conceptWebPrompt
+      : format === 'comparison' ? comparisonPrompt
       : scenePrompt;
 
     const prompt = templateFn(filename, text);
