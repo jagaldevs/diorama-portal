@@ -16,10 +16,10 @@ An animated diagram showing a process or cycle (e.g. water cycle, photosynthesis
 
 TECHNICAL REQUIREMENTS:
 - Pure HTML + CSS + vanilla JavaScript only (no external libraries except Google Fonts)
-- Steps arranged in a circle (for cycles) or horizontal flow (for linear processes) — choose based on content
-- SVG arrows between steps with CSS animation (stroke-dashoffset) to show flow direction
-- Animated dots/particles travel along the paths using CSS animation + SVG
-- Each step: rounded card with icon (unicode emoji), label, click to expand detail
+- Steps arranged in a CIRCLE using absolute positioning — place each step card using: left = 50% + R*cos(angle), top = 50% + R*sin(angle) where R = 38vmin and angle = (i / total) * 2 * Math.PI - Math.PI/2. Transform: translate(-50%, -50%).
+- Draw SVG arrows between consecutive steps as curved paths
+- Each step: rounded card (min 120px wide) with icon (unicode emoji), label, click to expand detail
+- Cards must NOT overlap — the circular layout guarantees this if you follow the formula above
 - Smooth CSS transitions for all interactions
 - Colour scheme: bright, clean, accessible — avoid dark backgrounds for science content
 - Works at any iframe size (use vw/vh units, flexbox/grid)

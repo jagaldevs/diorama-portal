@@ -18,6 +18,8 @@ TECHNICAL REQUIREMENTS:
 - Three.js r128 CDN: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
 - Events arranged along a curved 3D path (use CatmullRomCurve3)
 - Keep all events near the origin — curve points must stay within x: -20 to 20, y: -5 to 10, z: -10 to 10
+- Space curve control points EVENLY — do not cluster points at one end. First control point at x: -18, last at x: 18, intermediate points distributed equally between them
+- Each event node must be at least 4 units away from every other event node
 - SINGLE camera system — orbit only, no mode switching. YOU MUST IMPLEMENT THIS EXACTLY:
 
   // orbitCenter is a THREE.Vector3 that shifts when flying to events

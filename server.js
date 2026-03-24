@@ -248,10 +248,12 @@ Respond with exactly this JSON structure:
   "reason": "one sentence explaining the format choice"
 }
 
-Rules:
-- "timeline": historical events, dates, chronological sequences, dynasties, wars, periods
-- "process": scientific cycles, biological processes, how something works, steps in a system
-- "scene": culture, society, daily life, a specific place or civilisation, geography of a place`
+Rules — read carefully, these are strict:
+- "timeline": ANY content involving dates, chronological sequences, historical events, biographies, reigns, wars, dynasties, periods, or "what happened and when". If the text has years or a sequence of events involving people over time, it is ALWAYS timeline.
+- "process": ONLY for scientific/technical processes — water cycle, photosynthesis, how a volcano erupts, stages of mitosis, how a law is passed. Must be a repeatable system or cycle, NOT a historical narrative.
+- "scene": culture, society, daily life, a specific place or civilisation, geography of a place. Use this when the content describes what a place or society looked like, not what happened over time.
+
+When in doubt between timeline and scene, choose timeline. Never use process for biographical or historical content.`
       }]
     });
 
