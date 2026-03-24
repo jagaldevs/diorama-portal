@@ -17,10 +17,30 @@ A 3D timeline where events float in space along a glowing track. The user clicks
 TECHNICAL REQUIREMENTS:
 - Three.js r128 CDN: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
 - Events arranged along a curved 3D path (use CatmullRomCurve3)
-- Camera animates smoothly between event positions using lerp (0.05 per frame)
-- Also allow free orbit between events — YOU MUST IMPLEMENT THIS EXACTLY:
+- Keep all events near the origin — curve points must stay within x: -20 to 20, y: -5 to 10, z: -10 to 10
+- SINGLE camera system — orbit only, no mode switching. YOU MUST IMPLEMENT THIS EXACTLY:
 
+  // orbitCenter is a THREE.Vector3 that shifts when flying to events
+  let orbitCenter = new THREE.Vector3(0, 0, 0);
   let theta = 0.4, phi = 1.0, radius = 22, isDragging = false, lastX = 0, lastY = 0;
+
+  function updateCamera() {
+    camera.position.set(
+      orbitCenter.x + radius * Math.sin(phi) * Math.sin(theta),
+      orbitCenter.y + radius * Math.cos(phi),
+      orbitCenter.z + radius * Math.sin(phi) * Math.cos(theta)
+    );
+    camera.lookAt(orbitCenter);
+  }
+
+  // When a numbered button is clicked, smoothly move orbitCenter to that event node:
+  function flyToEvent(eventPos) {
+    // lerp orbitCenter toward eventPos in the animate loop using a target
+    targetCenter.copy(eventPos);
+  }
+  let targetCenter = new THREE.Vector3(0, 0, 0);
+  // In animate loop: orbitCenter.lerp(targetCenter, 0.05); then updateCamera();
+
   renderer.domElement.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
   window.addEventListener('mouseup', () => isDragging = false);
   window.addEventListener('mousemove', e => {
@@ -38,17 +58,19 @@ TECHNICAL REQUIREMENTS:
     phi = Math.max(0.25, Math.min(Math.PI / 2.1, phi + (e.touches[0].clientY - lastY) * 0.01));
     lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
   });
-- Each event: a glowing sphere node + floating HTML label card
-- Environment: dark background (#0a0a1a), subtle star particle field (2000 points), thin glowing track line
-- Simple vertex + fragment shaders for the track glow and event nodes
+- Each event: a glowing sphere node (use MeshBasicMaterial with a bright colour — NO ShaderMaterial on nodes) + floating HTML label card
+- Track line: use LineBasicMaterial with color 0xd4af37 — NO ShaderMaterial on the track
+- Environment: dark background (#0a0a1a), subtle star particle field (1000 points using PointsMaterial)
 - No complex scene geometry needed — keep it clean and minimal
 - HTML event cards positioned via Vector3.project(camera) each frame
 - Cards show: year/date, title, 2-sentence description, key figure if any
 
 CRITICAL (Three.js r128):
+- NEVER use ShaderMaterial — use LineBasicMaterial for the track, MeshBasicMaterial for nodes
 - NEVER Object.assign on mesh.position — always .position.set(x,y,z)
 - NEVER add Math.random() to a hex colour — use palette arrays
 - NO CapsuleGeometry
+- DO NOT create two competing camera modes — use only the single orbit system above
 
 CONTENT — extract from source only:
 - 5–8 EVENTS: { id, year, title, description (2 sentences), keyFigure, significance }
