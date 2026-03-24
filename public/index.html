@@ -211,7 +211,7 @@ main {
   letter-spacing: 0.04em;
 }
 
-/* ---- Format switcher ---- */
+/* ---- Section label ---- */
 .fmt-label {
   font-size: 11px;
   font-weight: 600;
@@ -219,29 +219,6 @@ main {
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 8px;
-}
-.fmt-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.fmt-btn {
-  flex: 1;
-  min-width: 70px;
-  padding: 9px 6px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.15s;
-  line-height: 1.4;
-}
-.fmt-btn .fmt-icon { display: block; font-size: 16px; margin-bottom: 3px; }
-.fmt-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(167,139,250,0.08);
 }
 
 /* ---- Goal selector ---- */
@@ -509,18 +486,8 @@ main {
         </div>
       </div>
 
-      <div>
-        <div class="fmt-label">Or pick a format directly</div>
-        <div class="fmt-row">
-          <button class="fmt-btn" data-fmt="timeline"><span class="fmt-icon">⌛</span>Timeline</button>
-          <button class="fmt-btn" data-fmt="process"><span class="fmt-icon">⚙️</span>Process</button>
-          <button class="fmt-btn" data-fmt="scene"><span class="fmt-icon">🌍</span>3D Scene</button>
-          <button class="fmt-btn" data-fmt="concept-web"><span class="fmt-icon">🕸️</span>Concept Web</button>
-          <button class="fmt-btn" data-fmt="comparison"><span class="fmt-icon">⚖️</span>Comparison</button>
-        </div>
-      </div>
 
-      <button class="btn btn-primary" id="btn-generate">Generate</button>
+<button class="btn btn-primary" id="btn-generate">Generate</button>
       <button class="btn btn-ghost" id="btn-back">&#8592; Upload a different file</button>
     </div>
 
@@ -684,15 +651,9 @@ main {
     const m = FORMAT_META[fmt] || FORMAT_META.scene;
     document.getElementById('cls-format').textContent = m.label;
     document.getElementById('cls-icon').textContent = m.icon;
-    document.querySelectorAll('.fmt-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.fmt === fmt));
     document.querySelectorAll('.goal-btn').forEach(b =>
       b.classList.toggle('active', b.dataset.fmt === fmt));
   }
-
-  document.querySelectorAll('.fmt-btn').forEach(btn => {
-    btn.addEventListener('click', () => selectFormat(btn.dataset.fmt));
-  });
 
   document.querySelectorAll('.goal-btn').forEach(btn => {
     btn.addEventListener('click', () => selectFormat(btn.dataset.fmt));
